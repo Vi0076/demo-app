@@ -3,17 +3,17 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "vi007/appserver"
-        DOCKER_CREDENTIALS_ID= "dockerhub-creds"
+        DOCKER_CREDENTIALS_ID = "dockerhub-creds"
     }
 
     stages {
-        stage( 'checkout') {
+        stage('Checkout') {
             steps {
                 git "https://github.com/Vi0076/demo-app.git"
             }
         }
 
-        stage("build docker image") {
+        stage("Build Docker Image") {
             steps {
                 script {
                     dockerImage = docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}")
@@ -21,23 +21,24 @@ pipeline {
             }
         }
 
-        stage("push to docker") {
+        stage("Push to Docker Hub") {
             steps {
                 script {
-                    docker.withRegistry("https://index.docker.io/v1", "${DOCKER_CREDENTIALS_ID}")
-                    dockerImage.push()
+                    docker.withRegistry("https://index.docker.io/v1/", DOCKER_CREDENTIALS_ID) {
+                        dockerImage.push()
+                    }
                 }
             }
         }
 
-        stage("run containe") {
+        stage("Run Container") {
             steps {
-                docker.withRegistry("https://index.docker.io/v1", "${DOCKER_CREDENTIALS_ID}")
-
-                sh """
-                docker rm -f nodejs-app || true
-                docker run -d --name nodejs-app -p 3000:3000 ${DOCKER_IMAGE}:${BUILD_NUMBER}
-                """
+                script {
+                    sh """
+                    docker rm -f nodejs-app || true
+                    docker run -d --name nodejs-app -p 3000:3000 ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                    """
+                }
             }
         }
     }
