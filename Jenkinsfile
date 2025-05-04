@@ -10,14 +10,12 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
+                    echo "Cloning repository from main branch"
                     sh """
-                    git clone https://github.com/Vi0076/demo-app.git
+                    git clone -b main https://github.com/Vi0076/demo-app.git
                     git branch
-                    
                     """
                 }
-                // git branch: 'main', url: 'https://github.com/Vi0076/demo-app.git'
-                
             }
         }
 
