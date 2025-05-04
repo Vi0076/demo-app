@@ -2,8 +2,8 @@ pipeline {
     agent any
     environment {
         DOCKER_IMAGE = "vi007/appserver"
-        DOCKER_HUB_USERNAME = credentials('username')
-        DOCKER_HUB_PASSWORD = credentials('passwd')
+        DOCKER_HUB_USERNAME = credentials('dockerhub-username')
+        DOCKER_HUB_PASSWORD = credentials('dockerhub-password')
     }
     triggers {
         githubPush()
@@ -26,9 +26,10 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
+                    // Authenticate with Docker Hub using the credentials
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
                         sh """
-                            echo $passwd | docker login -u $username --password-stdin
+                            echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
                             docker image push ${DOCKER_IMAGE}:latest
                         """
                     }
