@@ -35,17 +35,22 @@ pipeline {
             }
         }
 
+        
+
         stage('Deploy to Server') {
-            steps {
-                script {
-                    sh """
-                        docker rm -f demo-app || true
-                        docker pull ${DOCKER_IMAGE}:latest
-                        docker run -d --name demo-app -p 3000:3000 ${DOCKER_IMAGE}:latest
-                    """
-                }
+    steps {
+        script {
+            docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                sh """
+                    docker rm -f demo-app || true
+                    docker pull ${DOCKER_IMAGE}:latest
+                    docker run -d --name demo-app -p 3000:3000 ${DOCKER_IMAGE}:latest
+                """
             }
         }
+    }
+}
+
     }
 
     post {
@@ -53,14 +58,14 @@ pipeline {
             emailext(
                 to: 'ananda.yashaswi@quokkalabs.com, prateek.roy@quokkalabs.com',
                 subject: "✅ Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "The latest build and deployment succeeded.\n\nCheck the app at http://<server-ip>:3000"
+                body: "The latest build and deployment succeeded."
             )
         }
         failure {
             emailext(
                 to: 'ananda.yashaswi@quokkalabs.com, prateek.roy@quokkalabs.com',
-                subject: "❌ Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: "The build failed. Please check the Jenkins console logs for details."
+                subject: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "The build failed. Please check the Jenkins console for details."
             )
         }
     }
