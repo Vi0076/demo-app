@@ -7,7 +7,7 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-    res.send('Welcome to the Demo');
+    res.send('Welcome to the Do');
 });
 
 app.get('/api/v1/test', (req, res) => {
