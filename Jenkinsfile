@@ -9,7 +9,15 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Vi0076/demo-app.git'
+                script {
+                    sh """
+                    git clone https://github.com/Vi0076/demo-app.git
+                    git branch
+                    
+                    """
+                }
+                // git branch: 'main', url: 'https://github.com/Vi0076/demo-app.git'
+                
             }
         }
 
