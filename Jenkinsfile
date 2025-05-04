@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: 'https://github.com/automation-quokkalabs/demo-app.git'
+                git branch: 'main', url: 'git@github.com:Vi0076/demo-app.git'
             }
         }
 
