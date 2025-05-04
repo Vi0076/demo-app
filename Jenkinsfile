@@ -35,17 +35,22 @@ pipeline {
             }
         }
 
+        
+
         stage('Deploy to Server') {
-            steps {
-                script {
-                    sh """
-                        docker rm -f demo-app || true
-                        docker pull ${DOCKER_IMAGE}:latest
-                        docker run -d --name demo-app -p 3000:3000 ${DOCKER_IMAGE}:latest
-                    """
-                }
+    steps {
+        script {
+            docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                sh """
+                    docker rm -f demo-app || true
+                    docker pull ${DOCKER_IMAGE}:latest
+                    docker run -d --name demo-app -p 3000:3000 ${DOCKER_IMAGE}:latest
+                """
             }
         }
+    }
+}
+
     }
 
     post {
