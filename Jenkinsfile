@@ -1,13 +1,15 @@
 pipeline {
     agent any
+
     environment {
         DOCKER_IMAGE = "vi007/appserver"
-        DOCKER_HUB_USERNAME = credentials('dockerhub-username')
-        DOCKER_HUB_PASSWORD = credentials('dockerhub-password')
+        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
     }
+
     triggers {
         githubPush()
     }
+
     stages {
         stage('Checkout') {
             steps {
@@ -18,7 +20,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE}:latest")
+                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
                 }
             }
         }
@@ -26,12 +28,8 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Authenticate with Docker Hub using the credentials
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
-                        sh """
-                            echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
-                            docker image push ${DOCKER_IMAGE}:latest
-                        """
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        dockerImage.push("latest")
                     }
                 }
             }
@@ -39,25 +37,31 @@ pipeline {
 
         stage('Deploy to Server') {
             steps {
-                sh '''
-                docker rm -f demo-app || true
-                docker pull ${DOCKER_IMAGE}:latest
-                docker run -d --name demo-app -p 3000:3000 ${DOCKER_IMAGE}:latest
-                '''
+                script {
+                    sh """
+                        docker rm -f demo-app || true
+                        docker pull ${DOCKER_IMAGE}:latest
+                        docker run -d --name demo-app -p 3000:3000 ${DOCKER_IMAGE}:latest
+                    """
+                }
             }
         }
     }
 
     post {
         success {
-            emailext to: 'ananda.yashaswi@quokkalabs.com, prateek.roy@quokkalabs.com',
-                    subject: "Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: "The latest build and deployment succeeded."
+            emailext(
+                to: 'ananda.yashaswi@quokkalabs.com, prateek.roy@quokkalabs.com',
+                subject: "✅ Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "The latest build and deployment succeeded."
+            )
         }
         failure {
-            emailext to: 'ananda.yashaswi@quokkalabs.com, prateek.roy@quokkalabs.com',
-                    subject: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: "The build failed. Please check the Jenkins console for details."
+            emailext(
+                to: 'ananda.yashaswi@quokkalabs.com, prateek.roy@quokkalabs.com',
+                subject: "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "The build failed. Please check the Jenkins console for details."
+            )
         }
     }
 }
