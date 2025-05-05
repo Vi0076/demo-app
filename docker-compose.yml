@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  app:
+    image: vi007/appserver:latest
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "3000:3000"
